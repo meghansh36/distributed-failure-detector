@@ -7,6 +7,7 @@ from typing import final, Final, NoReturn
 from contextlib import suppress
 from members import Member
 from packets import Packet
+from membershipList import MemberShipList
 # from pack_util import packet_pack, packet_unpack
 
 from protocol import AwesomeProtocol
@@ -17,6 +18,7 @@ class Worker:
         self.io: Final = io
         self._waiting: WeakKeyDictionary[Member, WeakSet[Event]] = WeakKeyDictionary()
         self.nodes = members
+        self.membership_list = MemberShipList()
 
     def _add_waiting(self, member, event: Event) -> None:
         waiting = self._waiting.get(member)
