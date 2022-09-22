@@ -14,10 +14,10 @@ async def run(config: Config):
 
     async with AsyncExitStack() as stack:
 
-        members = [Member('127.0.0.1', 8001)]
+        # members = [Member('127.0.0.1', 8001)]
         stack.enter_context(suppress(asyncio.CancelledError))
-        # tranport = UdpTransport(config.member.host, config.member.port, config.ping_members)
-        tranport = UdpTransport('127.0.0.1', 8000, members)
+        tranport = UdpTransport(config.member.host, config.member.port, config.ping_members)
+        # tranport = UdpTransport('127.0.0.1', 8000, members)
         worker = await stack.enter_async_context(tranport.enter())
 
         task = asyncio.create_task(worker.run())
@@ -31,7 +31,7 @@ async def run(config: Config):
 def parse_cmdline_args(arguments) -> Config:
         
     hostname = '127.0.0.1'
-    port = 8000
+    port = 8001
     conf = None
 
     try:

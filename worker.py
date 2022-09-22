@@ -1,5 +1,5 @@
 import asyncio
-from asyncio import Event
+from asyncio import Event, exceptions
 from contextlib import suppress
 from datetime import datetime
 from weakref import WeakSet, WeakKeyDictionary
@@ -49,13 +49,17 @@ class Worker:
                 packedPacket = ackPacket.packet_pack()
                 await self.io.send(host, port, packedPacket)
 
-    async def _wait(self, target, timeout: float) -> bool:
+    async def _wait(self, target: Member, timeout: float) -> bool:
         event = Event()
         self._add_waiting(target, event)
-        with suppress(TimeoutError):
+
+        try:
             await asyncio.wait_for(event.wait(), timeout)
-        
-        print('comming here...')
+        except exceptions.TimeoutError:
+            print(f'failed to recieve ACK from {target.host}:{target.port}')
+        except Exception as e:
+            print(f'Exception when waiting for ACK from {target.host}:{target.port}: {e}')
+    
         return event.is_set()
 
     async def check(self, member: Member):
@@ -66,7 +70,6 @@ class Worker:
         await self.io.send(member.host, member.port, packedPacket)
 
         online = await self._wait(member, 2)
-        print(f'host online flag = {online}')
 
     async def run_failure_detection(self) -> NoReturn:
         while True:

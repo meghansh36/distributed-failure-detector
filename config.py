@@ -48,7 +48,7 @@ class Config:
         self.ping_members: List[Member] = GLOBAL_RING_TOPOLOGY[self.member]
         
     
-    def _get_member(hostname, port):
+    def _get_member(self, hostname, port):
 
         member = None
         for node in GLOBAL_RING_TOPOLOGY.keys():
