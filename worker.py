@@ -6,6 +6,8 @@ from weakref import WeakSet, WeakKeyDictionary
 from typing import final, Final, NoReturn
 from contextlib import suppress
 from members import Member
+from packets import Packet
+# from pack_util import packet_pack, packet_unpack
 
 from protocol import AwesomeProtocol
 
@@ -30,10 +32,11 @@ class Worker:
 
     async def _run_handler(self) -> NoReturn:
         while True:
-            data, host, port = await self.io.recv()
-            print(f'got this data: {data} from {host}:{port}')
+            packedPacket, host, port = await self.io.recv()
+            receivedPacket = Packet.packet_unpack(packedPacket)
+            print(f'got this data: {receivedPacket.data} from {host}:{port}')
 
-            if (data == b"ack"):
+            if (receivedPacket.packetType == "ACK"):
                 print(f'got ack from {host}:{port}')
                 curr_member = None
                 for member in self.members:
@@ -41,8 +44,10 @@ class Worker:
                         curr_member = member
                 if member is not None:
                     self._notify_waiting(curr_member)
-            else:
-                await self.io.send(host, port, b"echo:" + data)
+            elif receivedPacket.packetType == "PING":
+                ackPacket = Packet("ACK", "membership list")
+                packedPacket = ackPacket.packet_pack()
+                await self.io.send(host, port, packedPacket)
 
     async def _wait(self, target, timeout: float) -> bool:
         event = Event()
@@ -55,7 +60,11 @@ class Worker:
 
     async def check(self, member: Member):
         print(f'sending pings to {member.host}:{member.port}')
-        await self.io.send(member.host, member.port, b"ping")
+        pingPacket = Packet("PING", "membership list")
+        packedPacket = pingPacket.packet_pack()
+
+        await self.io.send(member.host, member.port, packedPacket)
+
         online = await self._wait(member, 2)
         print(f'host online flag = {online}')
 

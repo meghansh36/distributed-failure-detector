@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import DatagramProtocol, DatagramTransport, BaseTransport, Condition
-from typing import Optional, cast
+from typing import Optional, cast, Tuple
 from collections import deque
 
 class AwesomeProtocol(DatagramProtocol):
@@ -20,9 +20,9 @@ class AwesomeProtocol(DatagramProtocol):
     def connection_made(self, transport: BaseTransport) -> None:
         self._transport = cast(DatagramTransport, transport)
 
-    def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
+    def datagram_received(self, data: bytes, addr: Tuple[str, int]) -> None:
         # parse data into a known structure
-        # print(f"received data: {data} from {addr[0]}:{addr[1]}")
+        print(f"received data: {data} from {addr[0]}:{addr[1]}")
         asyncio.create_task(self._push((data, addr[0], addr[1])))
     
     def error_received(self, exc: Exception) -> None:
