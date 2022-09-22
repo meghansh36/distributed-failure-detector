@@ -1,7 +1,11 @@
 from typing import final, List
 from members import Member
 
-M = 4
+M : final = 4
+
+PING_TIMEOOUT: final = 0.5
+
+PING_DURATION: final = 1.5
 
 H1: final = Member('127.0.0.1', 8001)
 H2: final = Member('127.0.0.1', 8002)
@@ -43,12 +47,11 @@ class Config:
 
     def __init__(self, hostname, port) -> None:
         
-        self.member: Member = self._get_member(hostname, port)
-
+        self.member: Member = Config.get_member(hostname, port)
         self.ping_members: List[Member] = GLOBAL_RING_TOPOLOGY[self.member]
         
-    
-    def _get_member(self, hostname, port):
+    @staticmethod
+    def get_member(hostname, port) -> Member:
 
         member = None
         for node in GLOBAL_RING_TOPOLOGY.keys():
@@ -56,3 +59,4 @@ class Config:
                 member = node
         
         return member
+    
