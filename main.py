@@ -10,9 +10,9 @@ async def run():
 
     async with AsyncExitStack() as stack:
 
-        members = [Member('127.0.0.1', 8001)]
+        members = [Member('127.0.0.1', 8000)]
         stack.enter_context(suppress(asyncio.CancelledError))
-        tranport = UdpTransport('127.0.0.1', 8000, members)
+        tranport = UdpTransport('127.0.0.1', 8001, members)
         worker = await stack.enter_async_context(tranport.enter())
 
         task = asyncio.create_task(worker.run())
