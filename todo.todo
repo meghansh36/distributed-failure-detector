@@ -1,0 +1,7 @@
+☐ create a global config for all hostnames and where to ping for each. this will be with introducer.
+
+☐ create a local membership list which is an empty dict
+
+☐ send regular interval pings to 4 clients every 1 send
+
+☐ wait for responses for 1 second
