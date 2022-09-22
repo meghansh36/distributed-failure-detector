@@ -4,47 +4,16 @@ from contextlib import suppress
 from datetime import datetime
 from weakref import WeakSet, WeakKeyDictionary
 from typing import final, Final, NoReturn
-from contextlib import asynccontextmanager, closing, suppress
+from contextlib import suppress
 from members import Member
 
 from protocol import AwesomeProtocol
-
-
-class UdpTransport():
-
-    def __init__(self, host, port, members) -> None:
-        self.host = host
-        self.port = port
-        self.members = members
-
-    @property
-    def bind_host(self) -> str:
-        bind_host = self.host
-        return bind_host
-
-    @property
-    def bind_port(self) -> int:
-        bind_port = self.port
-        return bind_port
-
-    @asynccontextmanager
-    async def enter(self):
-        loop = asyncio.get_running_loop()
-        transport, protocol = await loop.create_datagram_endpoint(
-            lambda: AwesomeProtocol(),
-            reuse_port=True, local_addr=(self.bind_host, self.bind_port))
-        assert isinstance(protocol, AwesomeProtocol)
-        worker = Worker(protocol, self.members)
-        with closing(transport):
-            yield worker
-
 
 class Worker:
 
     def __init__(self, io: AwesomeProtocol, members) -> None:
         self.io: Final = io
         self._waiting: WeakKeyDictionary[Member, WeakSet[Event]] = WeakKeyDictionary()
-        self._listening: WeakKeyDictionary[Member, WeakSet[Member]] = WeakKeyDictionary()
         self.members = members
 
     def _add_waiting(self, member, event: Event) -> None:
@@ -53,24 +22,11 @@ class Worker:
             self._waiting[member] = waiting = WeakSet()
         waiting.add(event)
 
-    def _add_listening(self, member, target) -> None:
-        listening = self._listening.get(target)
-        if listening is None:
-            self._listening[target] = listening = WeakSet()
-        listening.add(member)
-
     def _notify_waiting(self, member) -> None:
         waiting = self._waiting.get(member)
         if waiting is not None:
             for event in waiting:
                 event.set()
-
-    def _get_listening(self, member):
-        listening = self._listening.pop(member, None)
-        if listening is not None:
-            return list(listening)
-        else:
-            return []
 
     async def _run_handler(self) -> NoReturn:
         while True:

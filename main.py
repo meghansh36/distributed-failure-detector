@@ -1,7 +1,8 @@
 import asyncio
 from contextlib import AsyncExitStack, suppress
 import signal
-from worker import UdpTransport, Member
+from members import Member
+from transport import UdpTransport
 
 async def run():
 
