@@ -16,7 +16,7 @@ class Worker:
     def __init__(self, io: AwesomeProtocol, members) -> None:
         self.io: Final = io
         self._waiting: WeakKeyDictionary[Member, WeakSet[Event]] = WeakKeyDictionary()
-        self.members = members
+        self.nodes = members
 
     def _add_waiting(self, member, event: Event) -> None:
         waiting = self._waiting.get(member)
@@ -38,12 +38,12 @@ class Worker:
 
             if (receivedPacket.packetType == "ACK"):
                 print(f'got ack from {host}:{port}')
-                curr_member = None
-                for member in self.members:
-                    if port == member.port:
-                        curr_member = member
-                if member is not None:
-                    self._notify_waiting(curr_member)
+                curr_node = None
+                for node in self.nodes:
+                    if port == node.port:
+                        curr_node = node
+                if node is not None:
+                    self._notify_waiting(curr_node)
             elif receivedPacket.packetType == "PING":
                 ackPacket = Packet("ACK", "membership list")
                 packedPacket = ackPacket.packet_pack()
@@ -62,19 +62,20 @@ class Worker:
     
         return event.is_set()
 
-    async def check(self, member: Member):
-        print(f'sending pings to {member.host}:{member.port}')
+    async def check(self, node: Member):
+        print(f'sending pings to {node.host}:{node.port}')
         pingPacket = Packet("PING", "membership list")
         packedPacket = pingPacket.packet_pack()
 
-        await self.io.send(member.host, member.port, packedPacket)
+        await self.io.send(node.host, node.port, packedPacket)
 
-        online = await self._wait(member, 2)
+        online = await self._wait(node, 2)
+        print(f'host online flag = {online}')
 
     async def run_failure_detection(self) -> NoReturn:
         while True:
-            for member in self.members:
-                asyncio.create_task(self.check(member))
+            for node in self.nodes:
+                asyncio.create_task(self.check(node))
 
             print(f'running failure detector: {datetime.now()}')
             await asyncio.sleep(20)
