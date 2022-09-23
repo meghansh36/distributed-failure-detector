@@ -1,6 +1,6 @@
+import sys
 import asyncio
 from asyncio import Event, exceptions
-from datetime import datetime
 from weakref import WeakSet, WeakKeyDictionary
 from typing import final, Final, NoReturn, Optional
 from config import Config, PING_TIMEOOUT, PING_DURATION
@@ -85,9 +85,23 @@ class Worker:
             # print(f'running failure detector: {datetime.now()}')
             await asyncio.sleep(PING_DURATION)
 
+    async def check_user_input(self):
+        loop = asyncio.get_event_loop()
+        queue = asyncio.Queue()
+
+        def response():
+            loop.create_task(queue.put(sys.stdin.readline()))
+
+        loop.add_reader(sys.stdin.fileno(), response)
+
+        while True:
+            data = await queue.get()
+            print("got: " + data.strip())
+
     @final
     async def run(self) -> NoReturn:
         await asyncio.gather(
             self._run_handler(),
-            self.run_failure_detection())
+            self.run_failure_detection(),
+            self.check_user_input())
         raise RuntimeError()
