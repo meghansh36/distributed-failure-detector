@@ -78,6 +78,7 @@ class Worker:
 
     async def run_failure_detection(self) -> NoReturn:
         while True:
+            print('-------------------------------')
             for node in self.nodes:
                 asyncio.create_task(self.check(node))
 
