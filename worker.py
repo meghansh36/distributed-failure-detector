@@ -1,3 +1,4 @@
+from datetime import datetime
 import sys
 import asyncio
 from asyncio import Event, exceptions
@@ -46,13 +47,14 @@ class Worker:
             # print(f'got this data: {packet.data} from {host}:{port}')
 
             if packet.type == PacketType.ACK:
-                # print(f'got ack from {host}:{port}')
                 curr_node = Config.get_node(hostname=host, port=port)
+                print(f'{datetime.now()}: got ack from {curr_node}')
                 if curr_node:
                     self.membership_list.update(packet.data)
                     self._notify_waiting(curr_node)
 
             elif packet.type == PacketType.PING:
+                print(f'{datetime.now()}: received ping from {host}:{port}')
                 self.membership_list.update(packet.data)
                 await self.io.send(host, port, Packet(PacketType.ACK, self.membership_list.get()).pack())
 
@@ -63,9 +65,9 @@ class Worker:
         try:
             await asyncio.wait_for(event.wait(), timeout)
         except exceptions.TimeoutError:
-            print(f'failed to recieve ACK from {node.host}:{node.port}')
+            print(f'{datetime.now()}: failed to recieve ACK from {node.unique_name}')
         except Exception as e:
-            print(f'Exception when waiting for ACK from {node.host}:{node.port}: {e}')
+            print(f'Exception when waiting for ACK from {node.unique_name}: {e}')
         finally:
             self.membership_list.update_node_status(node=node, status=0)
     
@@ -73,6 +75,7 @@ class Worker:
 
     async def check(self, node: Node):
         # print(f'sending ping to {node.host}:{node.port}')
+        print(f'{datetime.now()}: pingning {node.unique_name}')
         await self.io.send(node.host, node.port, Packet(PacketType.PING, self.membership_list.get()).pack())
         await self._wait(node, PING_TIMEOOUT)
 

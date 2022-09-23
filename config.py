@@ -3,11 +3,11 @@ from nodes import Node
 
 M : final = 4
 
-PING_TIMEOOUT: final = 2
+PING_TIMEOOUT: final = 5
 
-PING_DURATION: final = 4
+PING_DURATION: final = 10
 
-CLEANUP_TIME: final = 6
+CLEANUP_TIME: final = 15
 
 # H1: final = Node('127.0.0.1', 8001, 'H1')
 # H2: final = Node('127.0.0.1', 8002, 'H2')
