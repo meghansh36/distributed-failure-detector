@@ -2,7 +2,7 @@ import asyncio
 from asyncio import Event, exceptions
 from datetime import datetime
 from weakref import WeakSet, WeakKeyDictionary
-from typing import final, Final, NoReturn
+from typing import final, Final, NoReturn, Optional
 from config import Config, PING_TIMEOOUT, PING_DURATION
 from nodes import Node
 from packets import Packet, PacketType
