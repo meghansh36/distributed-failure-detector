@@ -8,6 +8,7 @@ from contextlib import suppress
 from members import Member
 from packets import Packet
 from membershipList import MemberShipList
+from config import Config
 # from pack_util import packet_pack, packet_unpack
 
 from protocol import AwesomeProtocol
@@ -19,6 +20,7 @@ class Worker:
         self._waiting: WeakKeyDictionary[Member, WeakSet[Event]] = WeakKeyDictionary()
         self.nodes = members
         self.membership_list = MemberShipList()
+        self.config:Config = None
 
     def _add_waiting(self, member, event: Event) -> None:
         waiting = self._waiting.get(member)
@@ -66,7 +68,9 @@ class Worker:
 
     async def check(self, node: Member):
         print(f'sending pings to {node.host}:{node.port}')
-        pingPacket = Packet("PING", "membership list")
+        self.membership_list.update_self_in_list(self.config.member)
+
+        pingPacket = Packet("PING", self.membership_list.get_membership_list())
         packedPacket = pingPacket.packet_pack()
 
         await self.io.send(node.host, node.port, packedPacket)

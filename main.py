@@ -19,7 +19,7 @@ async def run(config: Config):
         tranport = UdpTransport(config.member.host, config.member.port, config.ping_members)
         # tranport = UdpTransport('127.0.0.1', 8000, members)
         worker = await stack.enter_async_context(tranport.enter())
-
+        worker.config = config
         task = asyncio.create_task(worker.run())
         loop.add_signal_handler(signal.SIGINT, task.cancel)
         loop.add_signal_handler(signal.SIGTERM, task.cancel)
