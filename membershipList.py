@@ -51,7 +51,9 @@ class MemberShipList:
 
     def update_node_status(self, node: Node, status: int):
         if node.unique_name in self.memberShipListDict:
-            self.memberShipListDict[node.unique_name] = (time.time(), status)
+            _, curr_node_status = self.memberShipListDict[node.unique_name]
+            if curr_node_status:
+                self.memberShipListDict[node.unique_name] = (time.time(), status)
     
     def print(self):
         print(f'current local membership list')
