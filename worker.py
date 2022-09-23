@@ -56,16 +56,18 @@ class Worker:
                 self.membership_list.update(packet.data)
                 await self.io.send(host, port, Packet(PacketType.ACK, self.membership_list.get()).pack())
 
-    async def _wait(self, target: Node, timeout: float) -> bool:
+    async def _wait(self, node: Node, timeout: float) -> bool:
         event = Event()
-        self._add_waiting(target, event)
+        self._add_waiting(node, event)
 
         try:
             await asyncio.wait_for(event.wait(), timeout)
         except exceptions.TimeoutError:
-            print(f'failed to recieve ACK from {target.host}:{target.port}')
+            print(f'failed to recieve ACK from {node.host}:{node.port}')
         except Exception as e:
-            print(f'Exception when waiting for ACK from {target.host}:{target.port}: {e}')
+            print(f'Exception when waiting for ACK from {node.host}:{node.port}: {e}')
+        finally:
+            self.membership_list.update_node_status(node=node, status=0)
     
         return event.is_set()
 
@@ -73,7 +75,7 @@ class Worker:
         # print(f'sending ping to {node.host}:{node.port}')
         self.membership_list.print()
         await self.io.send(node.host, node.port, Packet(PacketType.PING, self.membership_list.get()).pack())
-        online = await self._wait(node, PING_TIMEOOUT)
+        await self._wait(node, PING_TIMEOOUT)
 
     async def run_failure_detection(self) -> NoReturn:
         while True:

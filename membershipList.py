@@ -42,9 +42,13 @@ class MemberShipList:
 
                 if new_status:
                     isNewNodeAddedToList = True
+
+    def update_node_status(self, node, status):
+        if node in self.memberShipListDict:
+            self.memberShipListDict[node][1] = status
     
     def print(self):
         print(f'current local membership list')
-        for key, value in self.memberShipListDict.items():
+        for key, value in self.get().items():
             print(f'{key.name} : {value}')
 
