@@ -8,9 +8,10 @@ class PacketType(Enum):
     INTRODUCE = 3
 
 class Packet:
-    def __init__(self, packetType: PacketType, data: dict):
+    def __init__(self, sender: str, packetType: PacketType, data: dict):
         self.data = data
         self.type = packetType
+        self.sender = sender
 
     def pack(self):
         pickled = pickle.dumps(self, pickle.HIGHEST_PROTOCOL)

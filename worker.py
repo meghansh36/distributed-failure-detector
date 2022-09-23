@@ -47,7 +47,7 @@ class Worker:
             # print(f'got this data: {packet.data} from {host}:{port}')
 
             if packet.type == PacketType.ACK:
-                curr_node = Config.get_node(hostname=host, port=port)
+                curr_node = Config.get_node_from_unique_name(packet.sender)
                 print(f'{datetime.now()}: got ack from {curr_node}')
                 if curr_node:
                     self.membership_list.update(packet.data)
@@ -56,7 +56,7 @@ class Worker:
             elif packet.type == PacketType.PING:
                 print(f'{datetime.now()}: received ping from {host}:{port}')
                 self.membership_list.update(packet.data)
-                await self.io.send(host, port, Packet(PacketType.ACK, self.membership_list.get()).pack())
+                await self.io.send(host, port, Packet(self.config.node.unique_name, PacketType.ACK, self.membership_list.get()).pack())
 
     async def _wait(self, node: Node, timeout: float) -> bool:
         event = Event()
@@ -76,7 +76,7 @@ class Worker:
     async def check(self, node: Node):
         # print(f'sending ping to {node.host}:{node.port}')
         print(f'{datetime.now()}: pingning {node.unique_name}')
-        await self.io.send(node.host, node.port, Packet(PacketType.PING, self.membership_list.get()).pack())
+        await self.io.send(node.host, node.port, Packet(self.config.node.unique_name, PacketType.PING, self.membership_list.get()).pack())
         await self._wait(node, PING_TIMEOOUT)
 
     async def run_failure_detection(self) -> NoReturn:

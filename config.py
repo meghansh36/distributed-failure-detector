@@ -70,6 +70,16 @@ class Config:
         for node in GLOBAL_RING_TOPOLOGY.keys():
             if node.host == hostname and node.port == port:
                 member = node
+                break
         
         return member
     
+    def get_node_from_unique_name(unique_name: str):
+
+        member = None
+        for node in GLOBAL_RING_TOPOLOGY.keys():
+            if node.unique_name == unique_name:
+                member = node
+                break
+
+        return member
