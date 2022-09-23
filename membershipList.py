@@ -16,7 +16,7 @@ class MemberShipList:
             node_curr_time, node_curr_status = self.memberShipListDict[key]
 
             if not node_curr_status and (time.time() - node_curr_time >= CLEANUP_TIME):
-                print(f'failure detected: {key.name}')
+                print(f'failure detected: {key}')
                 del self.memberShipListDict[key]
 
     def get(self):
