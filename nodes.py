@@ -18,3 +18,7 @@ class Node():
     @property
     def name(self):
         return self._name
+    
+    @property
+    def unique_name(self):
+        return f'{self.host}:{self.port}'

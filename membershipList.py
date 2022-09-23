@@ -21,7 +21,7 @@ class MemberShipList:
 
     def get(self):
         self._cleanup()
-        self.memberShipListDict[self.self_node] = (time.time(), 1)
+        self.memberShipListDict[self.self_node.unique_name] = (time.time(), 1)
         return self.memberShipListDict
 
     def update(self, new_membership_list: dict) -> None:
@@ -39,12 +39,12 @@ class MemberShipList:
                 if new_status:
                     isNewNodeAddedToList = True
 
-    def update_node_status(self, node, status):
-        if node in self.memberShipListDict:
-            self.memberShipListDict[node][1] = status
+    def update_node_status(self, node: Node, status: int):
+        if node.unique_name in self.memberShipListDict:
+            self.memberShipListDict[node.unique_name][1] = status
     
     def print(self):
         print(f'current local membership list')
         for key, value in self.get().items():
-            print(f'{key.name} : {value}')
+            print(f'{key} : {value}')
 
