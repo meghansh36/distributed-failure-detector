@@ -1,3 +1,4 @@
+from datetime import datetime
 from nodes import Node
 import time
 from nodes import Node
@@ -16,9 +17,10 @@ class MemberShipList:
         for key in self.memberShipListDict.keys():
             node_curr_time, node_curr_status = self.memberShipListDict[key]
 
-            if not node_curr_status and (time.time() - node_curr_time >= CLEANUP_TIME):
-                print(f'failure detected: {key}')
-                keys_for_cleanup.append(key)
+            if not node_curr_status:
+                if (time.time() - node_curr_time) >= CLEANUP_TIME:
+                    print(f'failure detected: {key}')
+                    keys_for_cleanup.append(key)
         
         for key_for_cleanup in keys_for_cleanup:
             del self.memberShipListDict[key_for_cleanup]
@@ -36,8 +38,10 @@ class MemberShipList:
             if key in self.memberShipListDict:
                 curr_time, curr_status = self.memberShipListDict[key]
                 if curr_time < new_time:
+                    print(f'{datetime.now()}: updating {key} to {new_time}, {new_status}')
                     self.memberShipListDict[key] = (new_time, new_status)
             else:
+                print(f'{datetime.now()}: freshly adding {key}')
                 self.memberShipListDict[key] = (new_time, new_status)
 
                 if new_status:

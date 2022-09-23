@@ -73,7 +73,6 @@ class Worker:
 
     async def check(self, node: Node):
         # print(f'sending ping to {node.host}:{node.port}')
-        self.membership_list.print()
         await self.io.send(node.host, node.port, Packet(PacketType.PING, self.membership_list.get()).pack())
         await self._wait(node, PING_TIMEOOUT)
 
@@ -96,7 +95,8 @@ class Worker:
 
         while True:
             data = await queue.get()
-            print("got: " + data.strip())
+            self.membership_list.print()
+            # print("got: " + data.strip())
 
     @final
     async def run(self) -> NoReturn:
