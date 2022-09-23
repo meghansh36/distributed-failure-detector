@@ -7,16 +7,18 @@ PING_TIMEOOUT: final = 0.5
 
 PING_DURATION: final = 1.5
 
-H1: final = Node('127.0.0.1', 8001)
-H2: final = Node('127.0.0.1', 8002)
-H3: final = Node('127.0.0.1', 8003)
-H4: final = Node('127.0.0.1', 8004)
-H5: final = Node('127.0.0.1', 8005)
-H6: final = Node('127.0.0.1', 8006)
-H7: final = Node('127.0.0.1', 8007)
-H8: final = Node('127.0.0.1', 8008)
-H9: final = Node('127.0.0.1', 8009)
-H10: final = Node('127.0.0.1', 8010)
+CLEANUP_TIME: final = 4.5
+
+H1: final = Node('127.0.0.1', 8001, 'H1')
+H2: final = Node('127.0.0.1', 8002, 'H2')
+H3: final = Node('127.0.0.1', 8003, 'H3')
+H4: final = Node('127.0.0.1', 8004, 'H4')
+H5: final = Node('127.0.0.1', 8005, 'H5')
+H6: final = Node('127.0.0.1', 8006, 'H6')
+H7: final = Node('127.0.0.1', 8007, 'H7')
+H8: final = Node('127.0.0.1', 8008, 'H8')
+H9: final = Node('127.0.0.1', 8009, 'H9')
+H10: final = Node('127.0.0.1', 8010, 'H10')
 
 GLOBAL_RING_TOPOLOGY: dict = {
 
