@@ -5,25 +5,25 @@ from weakref import WeakSet, WeakKeyDictionary
 from typing import final, Final, NoReturn
 
 from config import Config, PING_TIMEOOUT, PING_DURATION
-from members import Member
+from nodes import Node
 from packets import Packet, PacketType
 from protocol import AwesomeProtocol
 
 class Worker:
 
-    def __init__(self, io: AwesomeProtocol, members) -> None:
+    def __init__(self, io: AwesomeProtocol, nodes) -> None:
         self.io: Final = io
-        self._waiting: WeakKeyDictionary[Member, WeakSet[Event]] = WeakKeyDictionary()
-        self.nodes = members
+        self._waiting: WeakKeyDictionary[Node, WeakSet[Event]] = WeakKeyDictionary()
+        self.nodes = nodes
 
-    def _add_waiting(self, member, event: Event) -> None:
-        waiting = self._waiting.get(member)
+    def _add_waiting(self, node: Node, event: Event) -> None:
+        waiting = self._waiting.get(node)
         if waiting is None:
-            self._waiting[member] = waiting = WeakSet()
+            self._waiting[node] = waiting = WeakSet()
         waiting.add(event)
 
-    def _notify_waiting(self, member) -> None:
-        waiting = self._waiting.get(member)
+    def _notify_waiting(self, node) -> None:
+        waiting = self._waiting.get(node)
         if waiting is not None:
             for event in waiting:
                 event.set()
@@ -40,15 +40,15 @@ class Worker:
             print(f'got this data: {packet.data} from {host}:{port}')
             if packet.type == PacketType.ACK:
                 print(f'got ack from {host}:{port}')
-                curr_member = Config.get_member(hostname=host, port=port)
-                if curr_member:
-                    self._notify_waiting(curr_member)
+                curr_node = Config.get_node(hostname=host, port=port)
+                if curr_node:
+                    self._notify_waiting(curr_node)
 
             elif packet.type == PacketType.PING:
                 # send ACK back to the node
                 await self.io.send(host, port, Packet(PacketType.ACK, {}).pack())
 
-    async def _wait(self, target: Member, timeout: float) -> bool:
+    async def _wait(self, target: Node, timeout: float) -> bool:
         event = Event()
         self._add_waiting(target, event)
 
@@ -61,10 +61,10 @@ class Worker:
     
         return event.is_set()
 
-    async def check(self, member: Member):
-        print(f'sending ping to {member.host}:{member.port}')
-        await self.io.send(member.host, member.port, Packet(PacketType.PING, {}).pack())
-        online = await self._wait(member, PING_TIMEOOUT)
+    async def check(self, node: Node):
+        print(f'sending ping to {node.host}:{node.port}')
+        await self.io.send(node.host, node.port, Packet(PacketType.PING, {}).pack())
+        online = await self._wait(node, PING_TIMEOOUT)
 
     async def run_failure_detection(self) -> NoReturn:
         while True:

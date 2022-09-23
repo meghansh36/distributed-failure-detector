@@ -1,5 +1,5 @@
 from typing import final, List
-from members import Member
+from nodes import Node
 
 M : final = 4
 
@@ -7,16 +7,16 @@ PING_TIMEOOUT: final = 0.5
 
 PING_DURATION: final = 1.5
 
-H1: final = Member('127.0.0.1', 8001)
-H2: final = Member('127.0.0.1', 8002)
-H3: final = Member('127.0.0.1', 8003)
-H4: final = Member('127.0.0.1', 8004)
-H5: final = Member('127.0.0.1', 8005)
-H6: final = Member('127.0.0.1', 8006)
-H7: final = Member('127.0.0.1', 8007)
-H8: final = Member('127.0.0.1', 8008)
-H9: final = Member('127.0.0.1', 8009)
-H10: final = Member('127.0.0.1', 8010)
+H1: final = Node('127.0.0.1', 8001)
+H2: final = Node('127.0.0.1', 8002)
+H3: final = Node('127.0.0.1', 8003)
+H4: final = Node('127.0.0.1', 8004)
+H5: final = Node('127.0.0.1', 8005)
+H6: final = Node('127.0.0.1', 8006)
+H7: final = Node('127.0.0.1', 8007)
+H8: final = Node('127.0.0.1', 8008)
+H9: final = Node('127.0.0.1', 8009)
+H10: final = Node('127.0.0.1', 8010)
 
 GLOBAL_RING_TOPOLOGY: dict = {
 
@@ -47,11 +47,11 @@ class Config:
 
     def __init__(self, hostname, port) -> None:
         
-        self.member: Member = Config.get_member(hostname, port)
-        self.ping_members: List[Member] = GLOBAL_RING_TOPOLOGY[self.member]
+        self.member: Node = Config.get_node(hostname, port)
+        self.ping_members: List[Node] = GLOBAL_RING_TOPOLOGY[self.member]
         
     @staticmethod
-    def get_member(hostname, port) -> Member:
+    def get_node(hostname, port) -> Node:
 
         member = None
         for node in GLOBAL_RING_TOPOLOGY.keys():
