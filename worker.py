@@ -16,7 +16,11 @@ class Worker:
         self._waiting: WeakKeyDictionary[Node, WeakSet[Event]] = WeakKeyDictionary()
         self.nodes = nodes
         self.config: Config = None
-        self.membership_list = Member
+        self.membership_list: Optional[MemberShipList] = None
+    
+    def initialize(self, config):
+        self.config = config
+        self.membership_list = MemberShipList(self.config.node)
 
     def _add_waiting(self, node: Node, event: Event) -> None:
         waiting = self._waiting.get(node)
@@ -35,20 +39,24 @@ class Worker:
             
             packedPacket, host, port = await self.io.recv()
             
-            packet = Packet.unpack(packedPacket)
+            packet: Packet = Packet.unpack(packedPacket)
             if not packet:
                 continue
             
             print(f'got this data: {packet.data} from {host}:{port}')
+
             if packet.type == PacketType.ACK:
                 print(f'got ack from {host}:{port}')
+
                 curr_node = Config.get_node(hostname=host, port=port)
                 if curr_node:
+                    self.membership_list.update(packet.data)
                     self._notify_waiting(curr_node)
 
+
             elif packet.type == PacketType.PING:
-                # send ACK back to the node
-                await self.io.send(host, port, Packet(PacketType.ACK, {}).pack())
+                self.membership_list.update(packet.data)
+                await self.io.send(host, port, Packet(PacketType.ACK, self.membership_list.get()).pack())
 
     async def _wait(self, target: Node, timeout: float) -> bool:
         event = Event()
@@ -66,7 +74,7 @@ class Worker:
     async def check(self, node: Node):
         print(f'sending ping to {node.host}:{node.port}')
 
-        await self.io.send(node.host, node.port, Packet(PacketType.PING, {}).pack())
+        await self.io.send(node.host, node.port, Packet(PacketType.PING, self.membership_list.get()).pack())
         online = await self._wait(node, PING_TIMEOOUT)
 
     async def run_failure_detection(self) -> NoReturn:

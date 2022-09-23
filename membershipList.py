@@ -1,17 +1,21 @@
-from members import Member
+from nodes import Node
 import time
+from nodes import Node
 
 class MemberShipList:
 
-    def __init__(self):
+    def __init__(self, node: Node):
         self.memberShipList = {}
+        self.self_node: Node = node
 
-    def get_membership_list(self):
+    def get(self):
+        node_data = (time.time(), 1)
+        # DO A CLEANUP
+        self.memberShipList[self.self_node] = node_data
         return self.memberShipList
 
-    def update_self_in_list(self, self_node: Member):
+    def update(self, new_membership_list: dict):
+        pass
 
-        node_data = (time.time(), "RUNNING")
-        self.memberShipList[self_node] = node_data
     
 
