@@ -12,12 +12,16 @@ class MemberShipList:
     
     def _cleanup(self):
 
+        keys_for_cleanup = []
         for key in self.memberShipListDict.keys():
             node_curr_time, node_curr_status = self.memberShipListDict[key]
 
             if not node_curr_status and (time.time() - node_curr_time >= CLEANUP_TIME):
                 print(f'failure detected: {key}')
-                del self.memberShipListDict[key]
+                keys_for_cleanup.append(key)
+        
+        for key_for_cleanup in keys_for_cleanup:
+            del self.memberShipListDict[key_for_cleanup]
 
     def get(self):
         self._cleanup()
