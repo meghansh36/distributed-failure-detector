@@ -43,16 +43,14 @@ class Worker:
             if not packet:
                 continue
             
-            print(f'got this data: {packet.data} from {host}:{port}')
+            # print(f'got this data: {packet.data} from {host}:{port}')
 
             if packet.type == PacketType.ACK:
-                print(f'got ack from {host}:{port}')
-
+                # print(f'got ack from {host}:{port}')
                 curr_node = Config.get_node(hostname=host, port=port)
                 if curr_node:
                     self.membership_list.update(packet.data)
                     self._notify_waiting(curr_node)
-
 
             elif packet.type == PacketType.PING:
                 self.membership_list.update(packet.data)
@@ -72,8 +70,8 @@ class Worker:
         return event.is_set()
 
     async def check(self, node: Node):
-        print(f'sending ping to {node.host}:{node.port}')
-
+        # print(f'sending ping to {node.host}:{node.port}')
+        self.membership_list.print()
         await self.io.send(node.host, node.port, Packet(PacketType.PING, self.membership_list.get()).pack())
         online = await self._wait(node, PING_TIMEOOUT)
 
@@ -82,7 +80,7 @@ class Worker:
             for node in self.nodes:
                 asyncio.create_task(self.check(node))
 
-            print(f'running failure detector: {datetime.now()}')
+            # print(f'running failure detector: {datetime.now()}')
             await asyncio.sleep(PING_DURATION)
 
     @final

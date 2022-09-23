@@ -1,8 +1,11 @@
 class Node():
 
-    def __init__(self, host, port) -> None:
+    def __init__(self, host, port, name = None) -> None:
         self._host = host
         self._port = port
+        self._name = f'{self._host}:{self._port}'
+        if name:
+            self._name = name
     
     @property
     def host(self):
@@ -11,3 +14,7 @@ class Node():
     @property
     def port(self):
         return self._port
+    
+    @property
+    def name(self):
+        return self._name
