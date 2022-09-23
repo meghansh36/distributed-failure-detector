@@ -28,15 +28,11 @@ class MemberShipList:
 
         isNewNodeAddedToList = False
         for key in new_membership_list.keys():
-
+            new_time, new_status = new_membership_list[key]
             if key in self.memberShipListDict:
-
-                new_time, new_status = new_membership_list[key]
                 curr_time, curr_status = self.memberShipListDict[key]
-
                 if curr_time < new_time:
                     self.memberShipListDict[key] = (new_time, new_status)
-
             else:
                 self.memberShipListDict[key] = (new_time, new_status)
 
