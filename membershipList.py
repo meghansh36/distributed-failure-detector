@@ -40,9 +40,11 @@ class MemberShipList:
                 if curr_time < new_time:
                     print(f'{datetime.now()}: updating {key} to {new_time}, {new_status}')
                     self.memberShipListDict[key] = (new_time, new_status)
+                    self.print()
             else:
                 print(f'{datetime.now()}: freshly adding {key}')
                 self.memberShipListDict[key] = (new_time, new_status)
+                self.print()
 
                 if new_status:
                     isNewNodeAddedToList = True
@@ -53,6 +55,6 @@ class MemberShipList:
     
     def print(self):
         print(f'current local membership list')
-        for key, value in self.get().items():
+        for key, value in self.memberShipListDict.items():
             print(f'{key} : {value}')
 
