@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import AsyncExitStack, suppress
 import signal
-from members import Member
+from nodes import Node
 from transport import UdpTransport
 import getopt
 import sys
@@ -14,7 +14,7 @@ async def run(config: Config):
 
     async with AsyncExitStack() as stack:
 
-        # members = [Member('127.0.0.1', 8001)]
+        # members = [Node('127.0.0.1', 8001)]
         stack.enter_context(suppress(asyncio.CancelledError))
         tranport = UdpTransport(config.member.host, config.member.port, config.ping_members)
         # tranport = UdpTransport('127.0.0.1', 8000, members)

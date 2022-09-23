@@ -1,59 +1,56 @@
 import asyncio
 from asyncio import Event, exceptions
-from contextlib import suppress
 from datetime import datetime
 from weakref import WeakSet, WeakKeyDictionary
 from typing import final, Final, NoReturn
-from contextlib import suppress
-from members import Member
-from packets import Packet
-from membershipList import MemberShipList
-from config import Config
-# from pack_util import packet_pack, packet_unpack
-
+from config import Config, PING_TIMEOOUT, PING_DURATION
+from nodes import Node
+from packets import Packet, PacketType
 from protocol import AwesomeProtocol
+from membershipList import MemberShipList
 
 class Worker:
 
-    def __init__(self, io: AwesomeProtocol, members) -> None:
+    def __init__(self, io: AwesomeProtocol, nodes) -> None:
         self.io: Final = io
-        self._waiting: WeakKeyDictionary[Member, WeakSet[Event]] = WeakKeyDictionary()
-        self.nodes = members
-        self.membership_list = MemberShipList()
-        self.config:Config = None
+        self._waiting: WeakKeyDictionary[Node, WeakSet[Event]] = WeakKeyDictionary()
+        self.nodes = nodes
+        self.config: Config = None
+        self.membership_list = Member
 
-    def _add_waiting(self, member, event: Event) -> None:
-        waiting = self._waiting.get(member)
+    def _add_waiting(self, node: Node, event: Event) -> None:
+        waiting = self._waiting.get(node)
         if waiting is None:
-            self._waiting[member] = waiting = WeakSet()
+            self._waiting[node] = waiting = WeakSet()
         waiting.add(event)
 
-    def _notify_waiting(self, member) -> None:
-        waiting = self._waiting.get(member)
+    def _notify_waiting(self, node) -> None:
+        waiting = self._waiting.get(node)
         if waiting is not None:
             for event in waiting:
                 event.set()
 
     async def _run_handler(self) -> NoReturn:
         while True:
+            
             packedPacket, host, port = await self.io.recv()
-            receivedPacket = Packet.packet_unpack(packedPacket)
-            print(f'got this data: {receivedPacket.data} from {host}:{port}')
-
-            if (receivedPacket.packetType == "ACK"):
+            
+            packet = Packet.unpack(packedPacket)
+            if not packet:
+                continue
+            
+            print(f'got this data: {packet.data} from {host}:{port}')
+            if packet.type == PacketType.ACK:
                 print(f'got ack from {host}:{port}')
-                curr_node = None
-                for node in self.nodes:
-                    if port == node.port:
-                        curr_node = node
-                if node is not None:
+                curr_node = Config.get_node(hostname=host, port=port)
+                if curr_node:
                     self._notify_waiting(curr_node)
-            elif receivedPacket.packetType == "PING":
-                ackPacket = Packet("ACK", "membership list")
-                packedPacket = ackPacket.packet_pack()
-                await self.io.send(host, port, packedPacket)
 
-    async def _wait(self, target: Member, timeout: float) -> bool:
+            elif packet.type == PacketType.PING:
+                # send ACK back to the node
+                await self.io.send(host, port, Packet(PacketType.ACK, {}).pack())
+
+    async def _wait(self, target: Node, timeout: float) -> bool:
         event = Event()
         self._add_waiting(target, event)
 
@@ -66,17 +63,11 @@ class Worker:
     
         return event.is_set()
 
-    async def check(self, node: Member):
-        print(f'sending pings to {node.host}:{node.port}')
-        self.membership_list.update_self_in_list(self.config.member)
+    async def check(self, node: Node):
+        print(f'sending ping to {node.host}:{node.port}')
 
-        pingPacket = Packet("PING", self.membership_list.get_membership_list())
-        packedPacket = pingPacket.packet_pack()
-
-        await self.io.send(node.host, node.port, packedPacket)
-
-        online = await self._wait(node, 2)
-        print(f'host online flag = {online}')
+        await self.io.send(node.host, node.port, Packet(PacketType.PING, {}).pack())
+        online = await self._wait(node, PING_TIMEOOUT)
 
     async def run_failure_detection(self) -> NoReturn:
         while True:
@@ -84,7 +75,7 @@ class Worker:
                 asyncio.create_task(self.check(node))
 
             print(f'running failure detector: {datetime.now()}')
-            await asyncio.sleep(20)
+            await asyncio.sleep(PING_DURATION)
 
     @final
     async def run(self) -> NoReturn:

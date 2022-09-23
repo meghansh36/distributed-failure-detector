@@ -1,4 +1,4 @@
-class Member():
+class Node():
 
     def __init__(self, host, port) -> None:
         self._host = host
