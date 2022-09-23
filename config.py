@@ -47,8 +47,8 @@ class Config:
 
     def __init__(self, hostname, port) -> None:
         
-        self.member: Node = Config.get_node(hostname, port)
-        self.ping_members: List[Node] = GLOBAL_RING_TOPOLOGY[self.member]
+        self.node: Node = Config.get_node(hostname, port)
+        self.ping_nodes: List[Node] = GLOBAL_RING_TOPOLOGY[self.node]
         
     @staticmethod
     def get_node(hostname, port) -> Node:

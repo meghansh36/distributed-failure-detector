@@ -5,6 +5,7 @@ from nodes import Node
 from transport import UdpTransport
 import getopt
 import sys
+from worker import Worker
 from config import Config
 
 
@@ -16,10 +17,10 @@ async def run(config: Config):
 
         # members = [Node('127.0.0.1', 8001)]
         stack.enter_context(suppress(asyncio.CancelledError))
-        tranport = UdpTransport(config.member.host, config.member.port, config.ping_members)
+        tranport = UdpTransport(config.node.host, config.node.port, config.ping_nodes)
         # tranport = UdpTransport('127.0.0.1', 8000, members)
-        worker = await stack.enter_async_context(tranport.enter())
-
+        worker: Worker = await stack.enter_async_context(tranport.enter())
+        worker.initialize(config)
         task = asyncio.create_task(worker.run())
         loop.add_signal_handler(signal.SIGINT, task.cancel)
         loop.add_signal_handler(signal.SIGTERM, task.cancel)
