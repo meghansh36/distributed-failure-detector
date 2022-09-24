@@ -66,9 +66,9 @@ class Worker:
             await asyncio.wait_for(event.wait(), timeout)
         except exceptions.TimeoutError:
             print(f'{datetime.now()}: failed to recieve ACK from {node.unique_name}')
+            self.membership_list.update_node_status(node=node, status=0)
         except Exception as e:
             print(f'Exception when waiting for ACK from {node.unique_name}: {e}')
-        finally:
             self.membership_list.update_node_status(node=node, status=0)
     
         return event.is_set()
