@@ -36,11 +36,13 @@ class MemberShipList:
     
     def topology_change(self) -> bool:
 
+        print('changing topology .........')
+
         online_nodes = [Config.get_node_from_unique_name(key) for key in self.memberShipListDict.keys()]
         if len(online_nodes) == 0:
             return False
 
-        new_ping_nodes = []
+        new_ping_nodes: List[Node] = []
 
         index = 0
         for current_pinging_node in self.current_pinging_nodes:
@@ -65,6 +67,10 @@ class MemberShipList:
                 new_ping_nodes.append(replace_node)
 
             index += 1
+        
+        print('new nodes:')
+        for n in new_ping_nodes:
+            print(f'{n.unique_name}')
 
         self.current_pinging_nodes = new_ping_nodes
             
