@@ -73,7 +73,33 @@ class MemberShipList:
             print(f'{n.unique_name}')
 
         self.current_pinging_nodes = new_ping_nodes
-            
+    
+    def topology_change_for_new_node(self):
+
+        print('new node added: changing topology .........')
+
+        online_nodes = [Config.get_node_from_unique_name(key) for key in self.memberShipListDict.keys()]
+
+        actual_ping_nodes: List[Node] = GLOBAL_RING_TOPOLOGY[self.itself]
+        
+        new_ping_nodes: List[Node] = []
+
+        index = 0
+        for actual_ping_node in actual_ping_nodes:
+
+            if (actual_ping_node in self.current_pinging_nodes) or (actual_ping_node in online_nodes):
+                new_ping_nodes.append(actual_ping_node)
+            else:
+                new_ping_nodes.append(self.current_pinging_nodes[index])
+
+            index += 1
+        
+        print('new nodes:')
+        for n in new_ping_nodes:
+            print(f'{n.unique_name}')
+        
+        self.current_pinging_nodes = new_ping_nodes
+
 
     def get(self):
         self._cleanup()
@@ -99,8 +125,8 @@ class MemberShipList:
                 if new_status:
                     isNewNodeAddedToList = True
 
-        # if isNewNodeAddedToList:
-        #     self.topology_change()
+        if isNewNodeAddedToList:
+            self.topology_change_for_new_node()
 
     def update_node_status(self, node: Node, status: int):
         if node.unique_name in self.memberShipListDict:
