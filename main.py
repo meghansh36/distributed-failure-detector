@@ -17,7 +17,7 @@ async def run(config: Config):
 
         # members = [Node('127.0.0.1', 8001)]
         stack.enter_context(suppress(asyncio.CancelledError))
-        tranport = UdpTransport(config.node.host, config.node.port, config.ping_nodes)
+        tranport = UdpTransport(config.node.host, config.node.port)
         # tranport = UdpTransport('127.0.0.1', 8000, members)
         worker: Worker = await stack.enter_async_context(tranport.enter())
         worker.initialize(config)

@@ -12,16 +12,15 @@ from membershipList import MemberShipList
 
 class Worker:
 
-    def __init__(self, io: AwesomeProtocol, nodes) -> None:
+    def __init__(self, io: AwesomeProtocol) -> None:
         self.io: Final = io
         self._waiting: WeakKeyDictionary[Node, WeakSet[Event]] = WeakKeyDictionary()
-        self.nodes = nodes
         self.config: Config = None
         self.membership_list: Optional[MemberShipList] = None
     
-    def initialize(self, config):
+    def initialize(self, config: Config):
         self.config = config
-        self.membership_list = MemberShipList(self.config.node)
+        self.membership_list = MemberShipList(self.config.node, self.config.ping_nodes)
 
     def _add_waiting(self, node: Node, event: Event) -> None:
         waiting = self._waiting.get(node)
@@ -48,13 +47,13 @@ class Worker:
 
             if packet.type == PacketType.ACK:
                 curr_node = Config.get_node_from_unique_name(packet.sender)
-                print(f'{datetime.now()}: got ack from {curr_node}')
+                # print(f'{datetime.now()}: got ack from {curr_node}')
                 if curr_node:
                     self.membership_list.update(packet.data)
                     self._notify_waiting(curr_node)
 
             elif packet.type == PacketType.PING:
-                print(f'{datetime.now()}: received ping from {host}:{port}')
+                # print(f'{datetime.now()}: received ping from {host}:{port}')
                 self.membership_list.update(packet.data)
                 await self.io.send(host, port, Packet(self.config.node.unique_name, PacketType.ACK, self.membership_list.get()).pack())
 
@@ -65,24 +64,23 @@ class Worker:
         try:
             await asyncio.wait_for(event.wait(), timeout)
         except exceptions.TimeoutError:
-            print(f'{datetime.now()}: failed to recieve ACK from {node.unique_name}')
+            # print(f'{datetime.now()}: failed to recieve ACK from {node.unique_name}')
             self.membership_list.update_node_status(node=node, status=0)
         except Exception as e:
-            print(f'Exception when waiting for ACK from {node.unique_name}: {e}')
+            # print(f'{datetime.now()}: Exception when waiting for ACK from {node.unique_name}: {e}')
             self.membership_list.update_node_status(node=node, status=0)
     
         return event.is_set()
 
     async def check(self, node: Node):
         # print(f'sending ping to {node.host}:{node.port}')
-        print(f'{datetime.now()}: pingning {node.unique_name}')
+        # print(f'{datetime.now()}: pingning {node.unique_name}')
         await self.io.send(node.host, node.port, Packet(self.config.node.unique_name, PacketType.PING, self.membership_list.get()).pack())
         await self._wait(node, PING_TIMEOOUT)
 
     async def run_failure_detection(self) -> NoReturn:
         while True:
-            print('-------------------------------')
-            for node in self.nodes:
+            for node in self.membership_list.current_pinging_nodes:
                 asyncio.create_task(self.check(node))
 
             # print(f'running failure detector: {datetime.now()}')

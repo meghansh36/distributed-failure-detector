@@ -6,10 +6,9 @@ from worker import Worker
 
 class UdpTransport():
 
-    def __init__(self, host, port, members) -> None:
+    def __init__(self, host, port) -> None:
         self.host = host
         self.port = port
-        self.members = members
 
     @property
     def bind_host(self) -> str:
@@ -28,6 +27,6 @@ class UdpTransport():
             lambda: AwesomeProtocol(),
             reuse_port=True, local_addr=(self.bind_host, self.bind_port))
         assert isinstance(protocol, AwesomeProtocol)
-        worker = Worker(protocol, self.members)
+        worker = Worker(protocol)
         with closing(transport):
             yield worker

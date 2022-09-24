@@ -23,7 +23,7 @@ class AwesomeProtocol(DatagramProtocol):
 
     def datagram_received(self, data: bytes, addr: Tuple[str, int]) -> None:
         # parse data into a known structure
-        print(f"{datetime.now()}: received data: from {addr[0]}:{addr[1]}")
+        # print(f"{datetime.now()}: received data: from {addr[0]}:{addr[1]}")
         asyncio.create_task(self._push((data, addr[0], addr[1])))
     
     def error_received(self, exc: Exception) -> None:
