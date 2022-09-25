@@ -38,12 +38,11 @@ class MemberShipList:
     
     def topology_change(self) -> bool:
 
-        logging.warning(f'detected {M} failures. changing topology .........')
+        logging.warning(f'changing topology .........')
 
         online_nodes = [Config.get_node_from_unique_name(key) for key in self.memberShipListDict.keys()]
-        print(f'{online_nodes[0] is H7}, {online_nodes[1] is H7}')
-        logging.debug(" ".join([node.unique_name for node in online_nodes]))
-#        return True
+        # logging.debug(" ".join([node.unique_name for node in online_nodes]))
+
         if len(online_nodes) == 0:
             return False
 
@@ -51,7 +50,7 @@ class MemberShipList:
 
         index = 0
         for current_pinging_node in self.current_pinging_nodes:
-            logging.debug(f'current ping node {current_pinging_node.unique_name}')
+            # logging.debug(f'current ping node {current_pinging_node.unique_name}')
             if current_pinging_node in online_nodes:
                 new_ping_nodes.append(current_pinging_node)
             else:
@@ -61,14 +60,12 @@ class MemberShipList:
                 while not found_replace_node:
                     curr_node_ping_list = GLOBAL_RING_TOPOLOGY[curr_node]
                     replace_node = curr_node_ping_list[index]
-
-                    logging.debug(f'checking nodes {curr_node.unique_name} {replace_node.unique_name}')
-                    if(replace_node is H7):
-                        print(f'{replace_node in online_nodes} {replace_node not in new_ping_nodes} {replace_node != self.itself}')
+                    # logging.debug(f'checking nodes {curr_node.unique_name} {replace_node.unique_name}')
                     if (replace_node in online_nodes) and (replace_node not in new_ping_nodes) and (replace_node != self.itself):
                         found_replace_node = True
-                        logging.debug(f'found replacement node {replace_node.unique_name}')
-                        return
+                        # logging.debug(f'found replacement node {replace_node.unique_name}')
+                    elif replace_node is current_pinging_node:
+                        break
                     else:
                         curr_node = replace_node
                 
