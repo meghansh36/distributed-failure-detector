@@ -61,7 +61,7 @@ class MemberShipList:
                     curr_node_ping_list = GLOBAL_RING_TOPOLOGY[curr_node]
                     replace_node = curr_node_ping_list[index]
                     # logging.debug(f'checking nodes {curr_node.unique_name} {replace_node.unique_name}')
-                    if (replace_node in online_nodes) and (replace_node not in new_ping_nodes) and (replace_node != self.itself):
+                    if (replace_node in online_nodes) and (replace_node not in self.current_pinging_nodes) and (replace_node not in new_ping_nodes) and (replace_node != self.itself):
                         found_replace_node = True
                         # logging.debug(f'found replacement node {replace_node.unique_name}')
                     elif replace_node is current_pinging_node:
