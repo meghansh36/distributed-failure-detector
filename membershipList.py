@@ -152,5 +152,10 @@ class MemberShipList:
         s = ""
         for key, value in items:
             s += f'{key} : {value}\n'
-        logging.info("local membership list: \n{s}")
+        logging.info(f"local membership list: \n{s}")
+
+        s = ""
+        for node in self.current_pinging_nodes:
+            s += node.unique_name + ";"
+        logging.info(f"current ping nodes: \n{s}")
 
