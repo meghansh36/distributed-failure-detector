@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import sys
 import asyncio
 from asyncio import Event, exceptions
@@ -45,11 +46,11 @@ class Worker:
             if not packet:
                 continue
             
-            # print(f'got this data: {packet.data} from {host}:{port}')
+            logging.debug(f'got data: {packet.data} from {host}:{port}')
 
             if packet.type == PacketType.ACK:
                 curr_node = Config.get_node_from_unique_name(packet.sender)
-                # print(f'{datetime.now()}: got ack from {curr_node}')
+                logging.debug(f'got ack from {curr_node}')
                 if curr_node:
                     self.membership_list.update(packet.data)
                     self._notify_waiting(curr_node)
@@ -67,16 +68,18 @@ class Worker:
             await asyncio.wait_for(event.wait(), timeout)
         except exceptions.TimeoutError:
             # print(f'{datetime.now()}: failed to recieve ACK from {node.unique_name}')
+            logging.error(f'failed to recieve ACK from {node.unique_name}')
             if not self.waiting_for_introduction:
                 self.membership_list.update_node_status(node=node, status=0)
             else:
-                print("Introducer Timed Out")
+                logging.error("Introducer Timed Out")
         except Exception as e:
             # print(f'{datetime.now()}: Exception when waiting for ACK from {node.unique_name}: {e}')
+            logging.error(f'Exception when waiting for ACK from {node.unique_name}: {e}')
             if not self.waiting_for_introduction:
                 self.membership_list.update_node_status(node=node, status=0)
             else:
-                print(f'{datetime.now()}: Exception when waiting for ACK from introducer: {e}')
+                logging.error(f'{datetime.now()}: Exception when waiting for ACK from introducer: {e}')
     
         return event.is_set()
 
@@ -85,9 +88,7 @@ class Worker:
         await self._wait(self.config.introducerNode, PING_TIMEOUT)
 
     async def check(self, node: Node):
-        # print(f'sending ping to {node.host}:{node.port}')
-        # print(f'{datetime.now()}: pingning {node.unique_name}')
-
+        logging.debug(f'pinging: {node.unique_name}')
         await self.io.send(node.host, node.port, Packet(self.config.node.unique_name, PacketType.PING, self.membership_list.get()).pack())
         await self._wait(node, PING_TIMEOOUT)
 
@@ -114,7 +115,6 @@ class Worker:
         while True:
             data = await queue.get()
             self.membership_list.print()
-            # print("got: " + data.strip())
 
     @final
     async def run(self) -> NoReturn:

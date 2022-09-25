@@ -1,4 +1,5 @@
 from enum import Enum
+import logging
 import pickle
 import struct
 import json
@@ -33,5 +34,5 @@ class Packet:
             # print(sender, packetType, data)
             return Packet(sender, PacketType(packetType), json.loads(data))
         except Exception as e:
-            print("unknown bytes.", e)
+            logging.error(f"unknown bytes: {e}")
             return None

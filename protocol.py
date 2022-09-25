@@ -1,6 +1,7 @@
 import asyncio
 from asyncio import DatagramProtocol, DatagramTransport, BaseTransport, Condition
 from datetime import datetime
+import logging
 from typing import Optional, cast, Tuple
 from collections import deque
 
@@ -27,10 +28,10 @@ class AwesomeProtocol(DatagramProtocol):
         asyncio.create_task(self._push((data, addr[0], addr[1])))
     
     def error_received(self, exc: Exception) -> None:
-        print('UDP operation failed')
+        logging.error('UDP operation failed')
 
     def connection_lost(self, exc: Optional[Exception]) -> None:
-        print(f'UDP connection lost: {exc}')
+        logging.error(f'UDP connection lost: {exc}')
         self._transport = None
 
     async def _push(self, data) -> None:
