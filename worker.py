@@ -69,18 +69,18 @@ class Worker:
             await asyncio.wait_for(event.wait(), timeout)
         except exceptions.TimeoutError:
             # print(f'{datetime.now()}: failed to recieve ACK from {node.unique_name}')
-            logging.error(f'failed to recieve ACK from {node.unique_name}')
             if not self.waiting_for_introduction:
+                logging.debug(f'failed to recieve ACK from {node.unique_name}')
                 self.membership_list.update_node_status(node=node, status=0)
             else:
-                logging.error("Introducer Timed Out")
+                logging.debug(f'failed to recieve ACK from Introducer')
         except Exception as e:
             # print(f'{datetime.now()}: Exception when waiting for ACK from {node.unique_name}: {e}')
-            logging.error(f'Exception when waiting for ACK from {node.unique_name}: {e}')
             if not self.waiting_for_introduction:
+                logging.debug(f'Exception when waiting for ACK from {node.unique_name}: {e}')
                 self.membership_list.update_node_status(node=node, status=0)
             else:
-                logging.error(f'{datetime.now()}: Exception when waiting for ACK from introducer: {e}')
+                logging.debug(f'Exception when waiting for ACK from introducer: {e}')
     
         return event.is_set()
 

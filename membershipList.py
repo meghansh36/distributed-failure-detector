@@ -6,7 +6,7 @@ from nodes import Node
 
 import logging
 
-from config import CLEANUP_TIME, M, GLOBAL_RING_TOPOLOGY, Config, H7
+from config import CLEANUP_TIME, M, GLOBAL_RING_TOPOLOGY, Config
 
 class MemberShipList:
 
@@ -34,86 +34,34 @@ class MemberShipList:
         if len(self._nodes_cleaned) >= M:
             self.topology_change()
             self._nodes_cleaned.clear()
-
     
-    def topology_change(self) -> bool:
+    def _find_replacement_node(self, node, index, online_nodes, new_ping_nodes):
 
-        logging.warning(f'changing topology .........')
+        if (node in online_nodes) and (node not in new_ping_nodes):
+            return node
+        
+        return self._find_replacement_node(GLOBAL_RING_TOPOLOGY[node][index], index, online_nodes, new_ping_nodes)
+
+    def topology_change(self):
+
+        if len(self.memberShipListDict) == 0:
+            self.current_pinging_nodes = []
+            return
 
         online_nodes = [Config.get_node_from_unique_name(key) for key in self.memberShipListDict.keys()]
-        # logging.debug(" ".join([node.unique_name for node in online_nodes]))
+        actual_ping_nodes = GLOBAL_RING_TOPOLOGY[self.itself]
 
-        if len(online_nodes) == 0:
-            return False
-
-        new_ping_nodes: List[Node] = []
+        new_ping_nodes = []
 
         index = 0
-        for current_pinging_node in GLOBAL_RING_TOPOLOGY[self.itself]:
-            # logging.debug(f'current ping node {current_pinging_node.unique_name}')
-            if current_pinging_node in online_nodes:
-                if current_pinging_node not in new_ping_nodes:
-                    new_ping_nodes.append(current_pinging_node)
-            else:
-                curr_node = current_pinging_node
-                replace_node = None
-                found_replace_node = False
-                while not found_replace_node:
-                    curr_node_ping_list = GLOBAL_RING_TOPOLOGY[curr_node]
-                    replace_node = curr_node_ping_list[index]
-                    # logging.debug(f'checking nodes {curr_node.unique_name} {replace_node.unique_name}')
-                    if (replace_node in online_nodes) and (replace_node not in new_ping_nodes) and (replace_node != self.itself):
-                        found_replace_node = True
-                        # logging.debug(f'found replacement node {replace_node.unique_name}')
-                    elif replace_node is current_pinging_node:
-                        break
-                    else:
-                        curr_node = replace_node
-                
-                if not found_replace_node:
-                    break
-            
-                if current_pinging_node not in new_ping_nodes:
-                    new_ping_nodes.append(replace_node)
-                
+        for node in actual_ping_nodes:
+            if len(new_ping_nodes) < len(self.memberShipListDict):
+                replacement_node = self._find_replacement_node(node, index, online_nodes, new_ping_nodes)
+                if (replacement_node not in new_ping_nodes) and not (replacement_node is self.itself):
+                    new_ping_nodes.append(replacement_node)
             index += 1
         
-        new_ping_nodes_str = ''
-        for n in new_ping_nodes:
-            new_ping_nodes_str += n.unique_name + ";"
-        
-        logging.info(f'new ping nodes: {new_ping_nodes_str}')
-
         self.current_pinging_nodes = new_ping_nodes
-    
-    def topology_change_for_new_node(self):
-
-        logging.warning(f'new node detected. changing topology .........')
-
-        online_nodes = [Config.get_node_from_unique_name(key) for key in self.memberShipListDict.keys()]
-
-        actual_ping_nodes: List[Node] = GLOBAL_RING_TOPOLOGY[self.itself]
-        
-        new_ping_nodes: List[Node] = []
-
-        index = 0
-        for actual_ping_node in actual_ping_nodes:
-
-            if (actual_ping_node in self.current_pinging_nodes) or (actual_ping_node in online_nodes):
-                new_ping_nodes.append(actual_ping_node)
-            else:
-                new_ping_nodes.append(self.current_pinging_nodes[index])
-
-            index += 1
-        
-        new_ping_nodes_str = ''
-        for n in new_ping_nodes:
-            new_ping_nodes_str += n.unique_name + ";"
-        
-        logging.info(f'new ping nodes: {new_ping_nodes_str}')
-        
-        self.current_pinging_nodes = new_ping_nodes
-
 
     def get(self):
         self._cleanup()
@@ -139,7 +87,6 @@ class MemberShipList:
 
         if isNewNodeAddedToList:
             self.topology_change()
-            # self.topology_change_for_new_node()
 
     def update_node_status(self, node: Node, status: int):
         if node.unique_name in self.memberShipListDict:
@@ -154,10 +101,10 @@ class MemberShipList:
         s = ""
         for key, value in items:
             s += f'{key} : {value}\n'
-        logging.info(f"local membership list: \n{s}")
+        logging.info(f"local membership list: {len(items)} \n{s}")
 
         s = ""
         for node in self.current_pinging_nodes:
-            s += node.unique_name + ";"
+            s += node.unique_name + "\n"
         logging.info(f"current ping nodes: \n{s}")
 
