@@ -8,6 +8,25 @@ import sys
 from worker import Worker
 from config import Config
 
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s: [%(levelname)s] %(message)s",
+    handlers=[
+        # logging.FileHandler("debug.log"),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+def setup_logging():
+    logger = logging.getLogger(__name__)  
+    logger.setLevel(logging.DEBUG)
+    handler = logging.FileHandler('log_file.log')
+    formatter = logging.Formatter('%(asctime)s : %(name)s  : %(funcName)s : %(levelname)s : %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
 
 async def run(config: Config):
 
@@ -51,13 +70,15 @@ def parse_cmdline_args(arguments) -> Config:
         conf = Config(hostname, port)
 
     except getopt.GetoptError:
-        print('failure_detector.py -h <hostname> -p <port>')
+        logging.error('failure_detector.py -h <hostname> -p <port>')
         sys.exit(2)
 
     return conf
 
 
 if __name__ == '__main__':
+
+    # setup_logging()
 
     conf = parse_cmdline_args(sys.argv[1:])
 

@@ -4,6 +4,8 @@ from nodes import Node
 import time
 from nodes import Node
 
+import logging
+
 from config import CLEANUP_TIME, M, GLOBAL_RING_TOPOLOGY, Config
 
 class MemberShipList:
@@ -22,7 +24,7 @@ class MemberShipList:
 
             if not node_curr_status:
                 if (time.time() - node_curr_time) >= CLEANUP_TIME:
-                    print(f'{datetime.now()}: Failure Detected: {key}')
+                    logging.error(f'Failure Detected: {key}')
                     keys_for_cleanup.append(key)
 
         for key_for_cleanup in keys_for_cleanup:
@@ -36,7 +38,7 @@ class MemberShipList:
     
     def topology_change(self) -> bool:
 
-        print('changing topology .........')
+        logging.warning(f'detected {M} failures. changing topology .........')
 
         online_nodes = [Config.get_node_from_unique_name(key) for key in self.memberShipListDict.keys()]
         if len(online_nodes) == 0:
@@ -68,15 +70,17 @@ class MemberShipList:
 
             index += 1
         
-        print('new nodes:')
+        new_ping_nodes_str = ''
         for n in new_ping_nodes:
-            print(f'{n.unique_name}')
+            new_ping_nodes_str += n.unique_name + ";"
+        
+        logging.info(f'new ping nodes: {new_ping_nodes_str}')
 
         self.current_pinging_nodes = new_ping_nodes
     
     def topology_change_for_new_node(self):
 
-        print('new node added: changing topology .........')
+        logging.warning(f'new node detected. changing topology .........')
 
         online_nodes = [Config.get_node_from_unique_name(key) for key in self.memberShipListDict.keys()]
 
@@ -94,9 +98,11 @@ class MemberShipList:
 
             index += 1
         
-        print('new nodes:')
+        new_ping_nodes_str = ''
         for n in new_ping_nodes:
-            print(f'{n.unique_name}')
+            new_ping_nodes_str += n.unique_name + ";"
+        
+        logging.info(f'new ping nodes: {new_ping_nodes_str}')
         
         self.current_pinging_nodes = new_ping_nodes
 
@@ -114,19 +120,18 @@ class MemberShipList:
             if key in self.memberShipListDict:
                 curr_time, curr_status = self.memberShipListDict[key]
                 if curr_time < new_time:
-                    # print(f'{datetime.now()}: updating {key} to {new_time}, {new_status}')
+                    logging.debug(f'updating {key} to {new_time}, {new_status}')
                     self.memberShipListDict[key] = (new_time, new_status)
-                    # self.print()
             else:
-                # print(f'{datetime.now()}: freshly adding {key}')
+                logging.debug(f'new node added: {key}')
                 self.memberShipListDict[key] = (new_time, new_status)
-                # self.print()
 
                 if new_status:
                     isNewNodeAddedToList = True
 
         if isNewNodeAddedToList:
-            self.topology_change_for_new_node()
+            self.topology_change()
+            # self.topology_change_for_new_node()
 
     def update_node_status(self, node: Node, status: int):
         if node.unique_name in self.memberShipListDict:
@@ -137,7 +142,9 @@ class MemberShipList:
     def print(self):
         items = list(self.memberShipListDict.items())
         items.sort()
-        print(f'local membership list: {len(items)}')
+
+        s = ""
         for key, value in items:
-            print(f'{key} : {value}')
+            s += f'{key} : {value}\n'
+        logging.info("local membership list: \n{s}")
 
