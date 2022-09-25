@@ -49,7 +49,7 @@ class MemberShipList:
         new_ping_nodes: List[Node] = []
 
         index = 0
-        for current_pinging_node in self.current_pinging_nodes:
+        for current_pinging_node in GLOBAL_RING_TOPOLOGY[self.itself]:
             # logging.debug(f'current ping node {current_pinging_node.unique_name}')
             if current_pinging_node in online_nodes:
                 new_ping_nodes.append(current_pinging_node)
