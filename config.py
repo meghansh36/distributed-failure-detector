@@ -33,25 +33,25 @@ H10: final = Node('fa22-cs425-6910.cs.illinois.edu', 8000, 'H10')
 
 GLOBAL_RING_TOPOLOGY: dict = {
 
-    H1: [H2, H10, H8, H6],
+    H1: [H2, H10, H5, H8],
 
-    H2: [H3, H1, H9, H7],
+    H2: [H3, H1, H6, H9],
 
-    H3: [H4, H2, H9, H8],
+    H3: [H4, H2, H7, H10],
 
-    H4: [H5, H3, H8, H10],
+    H4: [H5, H3, H8, H1],
 
-    H5: [H6, H4, H9, H1],
+    H5: [H6, H4, H9, H2],
 
-    H6: [H7, H5, H1, H3],
+    H6: [H7, H5, H10, H3],
 
-    H7: [H8, H6, H2, H4],
+    H7: [H8, H6, H1, H4],
 
-    H8: [H9, H7, H3, H4],
+    H8: [H9, H7, H2, H5],
 
-    H9: [H10, H8, H3, H5],
+    H9: [H10, H8, H3, H6],
 
-    H10: [H1, H9, H4, H6]
+    H10: [H1, H9, H4, H7]
 
 }
 
