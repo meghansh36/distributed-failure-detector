@@ -58,10 +58,16 @@ GLOBAL_RING_TOPOLOGY: dict = {
 
 class Config:
 
-    def __init__(self, hostname, port) -> None:
+    def __init__(self, hostname, port, introducer) -> None:
         
         self.node: Node = Config.get_node(hostname, port)
         self.ping_nodes: List[Node] = GLOBAL_RING_TOPOLOGY[self.node]
+        self.introducerNode = Node(introducer.split(":")[0], int(introducer.split(":")[1]))
+
+        if(self.node.unique_name == self.introducerNode.unique_name):
+            self.introducerFlag = True
+        else:
+            self.introducerFlag = False
         
     @staticmethod
     def get_node(hostname, port) -> Node:

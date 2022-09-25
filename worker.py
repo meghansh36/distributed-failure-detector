@@ -20,7 +20,9 @@ class Worker:
     
     def initialize(self, config: Config):
         self.config = config
+        self.waiting_for_introduction = False if self.config.introducerFlag else True
         self.membership_list = MemberShipList(self.config.node, self.config.ping_nodes)
+    
 
     def _add_waiting(self, node: Node, event: Event) -> None:
         waiting = self._waiting.get(node)
@@ -52,7 +54,7 @@ class Worker:
                     self.membership_list.update(packet.data)
                     self._notify_waiting(curr_node)
 
-            elif packet.type == PacketType.PING:
+            elif packet.type == PacketType.PING or packet.type == PacketType.INTRODUCE:
                 # print(f'{datetime.now()}: received ping from {host}:{port}')
                 self.membership_list.update(packet.data)
                 await self.io.send(host, port, Packet(self.config.node.unique_name, PacketType.ACK, self.membership_list.get()).pack())
@@ -65,23 +67,37 @@ class Worker:
             await asyncio.wait_for(event.wait(), timeout)
         except exceptions.TimeoutError:
             # print(f'{datetime.now()}: failed to recieve ACK from {node.unique_name}')
-            self.membership_list.update_node_status(node=node, status=0)
+            if not self.waiting_for_introduction:
+                self.membership_list.update_node_status(node=node, status=0)
+            else:
+                print("Introducer Timed Out")
         except Exception as e:
             # print(f'{datetime.now()}: Exception when waiting for ACK from {node.unique_name}: {e}')
-            self.membership_list.update_node_status(node=node, status=0)
+            if not self.waiting_for_introduction:
+                self.membership_list.update_node_status(node=node, status=0)
+            else:
+                print(f'{datetime.now()}: Exception when waiting for ACK from introducer: {e}')
     
         return event.is_set()
+
+    async def introduce(self):
+        await self.io.send(self.config.introducerNode.host, self.config.introducerNode.port, Packet(self.config.node.unique_name, PacketType.INTRODUCE, self.membership_list.get()).pack())
+        await self._wait(self.config.introducerNode, PING_TIMEOUT)
 
     async def check(self, node: Node):
         # print(f'sending ping to {node.host}:{node.port}')
         # print(f'{datetime.now()}: pingning {node.unique_name}')
+
         await self.io.send(node.host, node.port, Packet(self.config.node.unique_name, PacketType.PING, self.membership_list.get()).pack())
         await self._wait(node, PING_TIMEOOUT)
 
     async def run_failure_detection(self) -> NoReturn:
         while True:
-            for node in self.membership_list.current_pinging_nodes:
-                asyncio.create_task(self.check(node))
+            if not self.waiting_for_introduction:
+                for node in self.membership_list.current_pinging_nodes:
+                    asyncio.create_task(self.check(node))
+            else:
+                asyncio.create_task(self.introduce())
 
             # print(f'running failure detector: {datetime.now()}')
             await asyncio.sleep(PING_DURATION)

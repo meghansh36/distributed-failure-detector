@@ -36,8 +36,8 @@ def parse_cmdline_args(arguments) -> Config:
     conf = None
 
     try:
-        opts, args = getopt.getopt(arguments, "h:p:", [
-            "hostname=", "port=", "help="])
+        opts, args = getopt.getopt(arguments, "h:p:i:", [
+            "hostname=", "port=","introducer=" "help="])
 
         for opt, arg in opts:
             if opt == '--help':
@@ -47,8 +47,11 @@ def parse_cmdline_args(arguments) -> Config:
                 hostname = arg
             elif opt in ("-p", "--port"):
                 port = int(arg)
+            elif opt in ("-i", "--introducer"):
+                introducer = arg
+
         
-        conf = Config(hostname, port)
+        conf = Config(hostname, port, introducer)
 
     except getopt.GetoptError:
         print('failure_detector.py -h <hostname> -p <port>')
