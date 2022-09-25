@@ -53,6 +53,7 @@ def parse_cmdline_args(arguments) -> Config:
     hostname = '127.0.0.1'
     port = 8001
     conf = None
+    introducer = None
 
     try:
         opts, args = getopt.getopt(arguments, "h:p:i:", [

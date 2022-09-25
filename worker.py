@@ -84,8 +84,9 @@ class Worker:
         return event.is_set()
 
     async def introduce(self):
+        logging.debug(f'sending pings to introducer: {self.config.introducerNode.unique_name}')
         await self.io.send(self.config.introducerNode.host, self.config.introducerNode.port, Packet(self.config.node.unique_name, PacketType.INTRODUCE, self.membership_list.get()).pack())
-        await self._wait(self.config.introducerNode, PING_TIMEOUT)
+        await self._wait(self.config.introducerNode, PING_TIMEOOUT)
 
     async def check(self, node: Node):
         logging.debug(f'pinging: {node.unique_name}')
