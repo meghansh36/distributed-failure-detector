@@ -49,8 +49,8 @@ class Worker:
             logging.debug(f'got data: {packet.data} from {host}:{port}')
 
             if packet.type == PacketType.ACK:
-                curr_node = Config.get_node_from_unique_name(packet.sender)
-                logging.debug(f'got ack from {curr_node}')
+                curr_node: Node = Config.get_node_from_unique_name(packet.sender)
+                logging.debug(f'got ack from {curr_node.unique_name}')
                 if curr_node:
                     self.waiting_for_introduction = False
                     self.membership_list.update(packet.data)
