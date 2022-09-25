@@ -52,6 +52,7 @@ class Worker:
                 curr_node = Config.get_node_from_unique_name(packet.sender)
                 logging.debug(f'got ack from {curr_node}')
                 if curr_node:
+                    self.waiting_for_introduction = False
                     self.membership_list.update(packet.data)
                     self._notify_waiting(curr_node)
 
