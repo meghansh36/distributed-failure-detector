@@ -24,7 +24,7 @@ class MemberShipList:
 
             if not node_curr_status:
                 if (time.time() - node_curr_time) >= CLEANUP_TIME:
-                    logging.error(f'Failure Detected: {key}')
+                    logging.error(f'cleanup timeout elapsed removing from membershiplist: {key}')
                     keys_for_cleanup.append(key)
 
         for key_for_cleanup in keys_for_cleanup:
@@ -79,7 +79,7 @@ class MemberShipList:
                     logging.debug(f'updating {key} to {new_time}, {new_status}')
                     self.memberShipListDict[key] = (new_time, new_status)
             else:
-                logging.debug(f'new node added: {key}')
+                logging.info(f'new node added: {key}')
                 self.memberShipListDict[key] = (new_time, new_status)
 
                 if new_status:
@@ -92,6 +92,7 @@ class MemberShipList:
         if node.unique_name in self.memberShipListDict:
             _, curr_node_status = self.memberShipListDict[node.unique_name]
             if curr_node_status:
+                logging.error(f'suspecting as failure: {node.unique_name}')
                 self.memberShipListDict[node.unique_name] = (time.time(), status)
 
     def print(self):

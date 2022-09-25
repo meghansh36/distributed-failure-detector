@@ -5,7 +5,7 @@ import asyncio
 from asyncio import Event, exceptions
 from weakref import WeakSet, WeakKeyDictionary
 from typing import final, Final, NoReturn, Optional
-from config import Config, PING_TIMEOOUT, PING_DURATION
+from config import GLOBAL_RING_TOPOLOGY, Config, PING_TIMEOOUT, PING_DURATION
 from nodes import Node
 from packets import Packet, PacketType
 from protocol import AwesomeProtocol
@@ -18,6 +18,8 @@ class Worker:
         self._waiting: WeakKeyDictionary[Node, WeakSet[Event]] = WeakKeyDictionary()
         self.config: Config = None
         self.membership_list: Optional[MemberShipList] = None
+        self.is_current_node_active = True
+        self.waiting_for_introduction = True
     
     def initialize(self, config: Config):
         self.config = config
@@ -43,7 +45,7 @@ class Worker:
             packedPacket, host, port = await self.io.recv()
             
             packet: Packet = Packet.unpack(packedPacket)
-            if not packet:
+            if (not packet) or (not self.is_current_node_active):
                 continue
             
             logging.debug(f'got data: {packet.data} from {host}:{port}')
@@ -96,13 +98,13 @@ class Worker:
 
     async def run_failure_detection(self) -> NoReturn:
         while True:
-            if not self.waiting_for_introduction:
-                for node in self.membership_list.current_pinging_nodes:
-                    asyncio.create_task(self.check(node))
-            else:
-                asyncio.create_task(self.introduce())
+            if self.is_current_node_active:
+                if not self.waiting_for_introduction:
+                    for node in self.membership_list.current_pinging_nodes:
+                        asyncio.create_task(self.check(node))
+                else:
+                    asyncio.create_task(self.introduce())
 
-            # print(f'running failure detector: {datetime.now()}')
             await asyncio.sleep(PING_DURATION)
 
     async def check_user_input(self):
@@ -115,8 +117,37 @@ class Worker:
         loop.add_reader(sys.stdin.fileno(), response)
 
         while True:
-            data = await queue.get()
-            self.membership_list.print()
+
+            print(f'choose one of the following options:')
+            print('1. list the membership list.')
+            print('2. list self id.')
+            print('3. join the group.')
+            print('4. leave the group.')
+
+            option: Optional[str] = None
+            while True:
+                option = await queue.get()
+                if option != '\n':
+                    break
+
+            if option.strip() == '1':
+                self.membership_list.print()
+            elif option.strip() == '2':
+                print(self.config.node.unique_name)
+            elif option.strip() == '3':
+                self.is_current_node_active = True
+                logging.info('started sending ACKs and PINGs')
+                pass
+            elif option.strip() == '4':
+                self.is_current_node_active = False
+                self.membership_list.memberShipListDict = dict()
+                self.config.ping_nodes = GLOBAL_RING_TOPOLOGY[self.config.node]
+                self.waiting_for_introduction = True
+                # self.initialize(self.config)
+                logging.info('stopped sending ACKs and PINGs')
+                pass
+            else:
+                print('invalid option.')
 
     @final
     async def run(self) -> NoReturn:
