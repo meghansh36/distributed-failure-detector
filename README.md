@@ -51,6 +51,32 @@ GLOBAL_RING_TOPOLOGY: dict = {
 
 The above example configure the failure detector to monitor 10 process running on 10 different ports locally.
 
+To configure the Completness and Accuracy of the failure detector follow below steps.
+
+Edit the following fields in `config.py`:
+
+1. `M`: Parameter to configure the completness of the system. configues the system to handle max number of simultanious failures.
+
+2. `PING_TIMEOOUT`: The time to wait for the ACK from the node.
+
+3. `PING_DURATION`: Parameter to configure frequency of PINGs.
+
+4. `CLEANUP_TIME`: The time out to mark a suspected node as failure and remove from membership list.
+
+The below configuration allows the failure detector to handle upto 3 failures and still maintain the 100% completeness. The M value can be changes to any number depending on the requirement. The PING_TIMEOUT can be adjusted such a way to improve the accuracy of failure detection and it depends on the network latency. The PING_DURATION lets users control the number of bytes flowing in the network, this parameter depends on the network capability. The CLEANUP_TIME gives a suspected node some additional time to make available online, this parameter depends on the network congestion and intermitent network issues in the system.
+
+```python
+
+M: final = 3
+
+PING_TIMEOOUT: final = 2
+
+PING_DURATION: final = 2.5
+
+CLEANUP_TIME: final = 10
+
+```
+
 ### STEP-2
 
 Once the nodes and global ring topology is updated. RUN the below command.
