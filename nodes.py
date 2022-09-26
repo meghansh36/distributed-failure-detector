@@ -1,5 +1,5 @@
 class Node():
-
+    """Node class abstraction for a machine in ring topology"""
     def __init__(self, host, port, name = None) -> None:
         self._host = host
         self._port = port

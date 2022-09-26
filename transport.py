@@ -4,7 +4,9 @@ from contextlib import asynccontextmanager, closing
 from protocol import AwesomeProtocol
 from worker import Worker
 
+
 class UdpTransport():
+    """Class to initialize UDP server and starts the worker"""
 
     def __init__(self, host, port) -> None:
         self.host = host
