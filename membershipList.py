@@ -15,6 +15,8 @@ class MemberShipList:
         self.itself: Node = node
         self.current_pinging_nodes: List[Node] = ping_nodes
         self._nodes_cleaned = set()
+        self.false_positives = 0
+        self.indirect_failures = 0
     
     def _cleanup(self):
 
@@ -34,6 +36,13 @@ class MemberShipList:
         if len(self._nodes_cleaned) >= M:
             self.topology_change()
             self._nodes_cleaned.clear()
+        
+        new_ping_nodes = []
+        for ping_node in self.current_pinging_nodes:
+            if ping_node.unique_name not in keys_for_cleanup:
+                new_ping_nodes.append(ping_node)
+
+        self.current_pinging_nodes = new_ping_nodes
     
     def _find_replacement_node(self, node, index, online_nodes, new_ping_nodes):
 
@@ -76,6 +85,12 @@ class MemberShipList:
             if key in self.memberShipListDict:
                 curr_time, curr_status = self.memberShipListDict[key]
                 if curr_time < new_time:
+                    if curr_status == 0 and new_status == 1:
+                        logging.info(f'unsuspecting {key}')
+                        self.false_positives += 1
+                    elif curr_status == 1 and new_status == 0:
+                        logging.info(f'indirectly suspecting as failure {key}')
+                        self.indirect_failures += 1
                     logging.debug(f'updating {key} to {new_time}, {new_status}')
                     self.memberShipListDict[key] = (new_time, new_status)
             else:

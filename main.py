@@ -30,19 +30,20 @@ async def run(config: Config):
 
 
 def parse_cmdline_args(arguments) -> Config:
-        
+
     hostname = '127.0.0.1'
     port = 8001
     conf = None
     introducer = None
+    testing = False
 
     try:
-        opts, args = getopt.getopt(arguments, "h:p:i:", [
-            "hostname=", "port=","introducer=" "help="])
+        opts, args = getopt.getopt(arguments, "h:p:i:t", [
+            "hostname=", "port=","introducer=", "help="])
 
         for opt, arg in opts:
             if opt == '--help':
-                print('failure_detector.py -h <hostname> -p <port>')
+                print('failure_detector.py -h <hostname> -p <port> -t')
                 sys.exit()
             elif opt in ("-h", "--hostname"):
                 hostname = arg
@@ -50,9 +51,10 @@ def parse_cmdline_args(arguments) -> Config:
                 port = int(arg)
             elif opt in ("-i", "--introducer"):
                 introducer = arg
+            elif opt in ("-t"):
+                testing = True
 
-        
-        conf = Config(hostname, port, introducer)
+        conf = Config(hostname, port, introducer, testing)
 
     except getopt.GetoptError:
         logging.error('failure_detector.py -h <hostname> -p <port> -i')

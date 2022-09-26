@@ -3,6 +3,7 @@ import logging
 import sys
 import asyncio
 from asyncio import Event, exceptions
+from time import time
 from weakref import WeakSet, WeakKeyDictionary
 from typing import final, Final, NoReturn, Optional
 from config import GLOBAL_RING_TOPOLOGY, Config, PING_TIMEOOUT, PING_DURATION
@@ -20,11 +21,14 @@ class Worker:
         self.membership_list: Optional[MemberShipList] = None
         self.is_current_node_active = True
         self.waiting_for_introduction = True
+        self.total_pings_send = 0
+        self.total_ack_missed = 0
     
     def initialize(self, config: Config):
         self.config = config
         self.waiting_for_introduction = False if self.config.introducerFlag else True
         self.membership_list = MemberShipList(self.config.node, self.config.ping_nodes)
+        self.io.testing = config.testing
     
 
     def _add_waiting(self, node: Node, event: Event) -> None:
@@ -71,12 +75,14 @@ class Worker:
             await asyncio.wait_for(event.wait(), timeout)
         except exceptions.TimeoutError:
             # print(f'{datetime.now()}: failed to recieve ACK from {node.unique_name}')
+            self.total_ack_missed += 1
             if not self.waiting_for_introduction:
                 logging.debug(f'failed to recieve ACK from {node.unique_name}')
                 self.membership_list.update_node_status(node=node, status=0)
             else:
                 logging.debug(f'failed to recieve ACK from Introducer')
         except Exception as e:
+            self.total_ack_missed += 1
             # print(f'{datetime.now()}: Exception when waiting for ACK from {node.unique_name}: {e}')
             if not self.waiting_for_introduction:
                 logging.debug(f'Exception when waiting for ACK from {node.unique_name}: {e}')
@@ -101,8 +107,10 @@ class Worker:
             if self.is_current_node_active:
                 if not self.waiting_for_introduction:
                     for node in self.membership_list.current_pinging_nodes:
+                        self.total_pings_send += 1
                         asyncio.create_task(self.check(node))
                 else:
+                    self.total_pings_send += 1
                     asyncio.create_task(self.introduce())
 
             await asyncio.sleep(PING_DURATION)
@@ -123,6 +131,9 @@ class Worker:
             print('2. list self id.')
             print('3. join the group.')
             print('4. leave the group.')
+            if self.config.testing:
+                print('5. print current bps.')
+                print('6. current false positive rate.')
 
             option: Optional[str] = None
             while True:
@@ -137,15 +148,25 @@ class Worker:
             elif option.strip() == '3':
                 self.is_current_node_active = True
                 logging.info('started sending ACKs and PINGs')
-                pass
             elif option.strip() == '4':
                 self.is_current_node_active = False
                 self.membership_list.memberShipListDict = dict()
                 self.config.ping_nodes = GLOBAL_RING_TOPOLOGY[self.config.node]
                 self.waiting_for_introduction = True
+                self.io.time_of_first_byte = 0
+                self.io.number_of_bytes_sent = 0
                 # self.initialize(self.config)
                 logging.info('stopped sending ACKs and PINGs')
-                pass
+            elif option.strip() == '5':
+                if self.io.time_of_first_byte != 0:
+                    logging.info(f'BPS: {(self.io.number_of_bytes_sent)/(time() - self.io.time_of_first_byte)}')
+                else:
+                    logging.info(f'BPS: 0')
+            elif option.strip() == '6':
+                if self.membership_list.false_positives > self.membership_list.indirect_failures:
+                    logging.info(f'False positive rate: {(self.membership_list.false_positives - self.membership_list.indirect_failures)/self.total_pings_send}, pings sent: {self.total_pings_send}, indirect failures: {self.membership_list.indirect_failures}, false positives: {self.membership_list.false_positives}')
+                else:
+                    logging.info(f'False positive rate: {(self.membership_list.indirect_failures - self.membership_list.false_positives)/self.total_pings_send}, pings sent: {self.total_pings_send}, indirect failures: {self.membership_list.indirect_failures}, false positives: {self.membership_list.false_positives}')
             else:
                 print('invalid option.')
 

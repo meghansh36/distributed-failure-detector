@@ -3,11 +3,11 @@ from nodes import Node
 
 M : final = 3
 
-PING_TIMEOOUT: final = 2.5
+PING_TIMEOOUT: final = 2
 
-PING_DURATION: final = 5
+PING_DURATION: final = 2.5
 
-CLEANUP_TIME: final = 15
+CLEANUP_TIME: final = 10
 
 # H1: final = Node('127.0.0.1', 8001, 'H1')
 # H2: final = Node('127.0.0.1', 8002, 'H2')
@@ -82,7 +82,7 @@ GLOBAL_RING_TOPOLOGY: dict = {
 
 class Config:
 
-    def __init__(self, hostname, port, introducer) -> None:
+    def __init__(self, hostname, port, introducer, testing) -> None:
         
         self.node: Node = Config.get_node(hostname, port)
         self.ping_nodes: List[Node] = GLOBAL_RING_TOPOLOGY[self.node]
@@ -92,6 +92,8 @@ class Config:
             self.introducerFlag = True
         else:
             self.introducerFlag = False
+        
+        self.testing = testing
         
     @staticmethod
     def get_node(hostname, port) -> Node:
